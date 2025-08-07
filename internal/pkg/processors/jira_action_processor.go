@@ -26,6 +26,8 @@ func (p *JiraActionProcessor) Process(toProcess *models.DataActionConfiguration)
 
 	if strings.EqualFold(toProcess.Action, "delete") {
 		return p.deleteIssues(issuesToActOn, toProcess, jiraClient)
+	} else if strings.EqualFold(toProcess.Action, "archive") {
+		return p.archiveIssues(issuesToActOn, toProcess, jiraClient)
 	} else {
 		err = errors.New("unsupported action: " + toProcess.Action)
 		return createErrorResult(err), err
@@ -97,5 +99,21 @@ func (p *JiraActionProcessor) deleteIssues(toDelete []string, toProcess *models.
 		AffectedObjectCount: len(toDelete),
 		FailureCount:        len(deleteErrors),
 		Failures:            core.FlattenErrors(deleteErrors),
+	}, nil
+}
+
+func (p *JiraActionProcessor) archiveIssues(toArchive []string, toProcess *models.DataActionConfiguration, client *v3.Client) (*models.DataActionResult, error) {
+	archivedResponse, _, err := client.Archival.Preserve(context.Background(), toArchive)
+
+	return &models.DataActionResult{
+		OrganizationId:      toProcess.OrganizationId,
+		Site:                toProcess.Site,
+		AppType:             toProcess.AppType,
+		Action:              toProcess.Action,
+		StartedAt:           time.Now(),
+		EndedAt:             time.Now(),
+		AffectedObjectCount: archivedResponse.NumberOfIssuesUpdated,
+		FailureCount:        archivedResponse.Errors.IssuesInArchivedProjects.Count,
+		Failures:            []error{err},
 	}, nil
 }
