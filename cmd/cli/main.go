@@ -6,11 +6,14 @@ import (
 	"github.com/jrolstad/team-shredder/internal/pkg/orchestrators"
 	"github.com/jrolstad/team-shredder/internal/pkg/processors"
 	"github.com/jrolstad/team-shredder/internal/pkg/repositories"
+	"github.com/jrolstad/team-shredder/internal/pkg/services"
 )
 
 func main() {
 	configurationRepository := repositories.NewDataActionConfigurationRepository()
-	processorFactory := processors.NewDataActionProcessorFactory()
+	secretService := services.NewSecretService()
+	processorFactory := processors.NewDataActionProcessorFactory(secretService)
+
 	result := orchestrators.ExecuteDataActions(configurationRepository, processorFactory)
 	showResult(result)
 }

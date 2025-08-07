@@ -18,16 +18,16 @@ func (r InMemoryDataActionConfigurationRepository) Get(organizationId string) ([
 			OrganizationId: organizationId,
 			AppType:        "confluence",
 			Action:         "purgeTrash",
-			Site:           "jrolstad-sandbox-1",
-			Query:          "lastModified < now(\"-5d\") AND type = page",
+			Site:           "https://jrolstad-sandbox-1.atlassian.net/wiki",
+			Query:          "lastModified  now(\"-5d\") AND type = page",
 		},
 		{
 			Id:             "2",
 			OrganizationId: organizationId,
 			AppType:        "jira",
 			Action:         "delete",
-			Site:           "jrolstad-sandbox-1",
-			Query:          "updated <= \"-5d\"",
+			Site:           "https://jrolstad-sandbox-1.atlassian.net",
+			Query:          "type = Story ORDER BY created DESC",
 		},
 	}, nil
 }

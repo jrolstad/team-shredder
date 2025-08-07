@@ -2,10 +2,12 @@ package processors
 
 import (
 	"github.com/jrolstad/team-shredder/internal/pkg/models"
+	"github.com/jrolstad/team-shredder/internal/pkg/services"
 	"time"
 )
 
 type ConfluenceActionProcessor struct {
+	SecretService services.SecretService
 }
 
 func (p *ConfluenceActionProcessor) Process(toProcess *models.DataActionConfiguration) (*models.DataActionResult, error) {
