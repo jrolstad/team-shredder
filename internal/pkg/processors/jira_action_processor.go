@@ -60,7 +60,7 @@ func (p *JiraActionProcessor) queryIssues(toProcess *models.DataActionConfigurat
 		[]string{"changelog"},
 		50,
 		"")
-	if response.StatusCode != 200 {
+	if response != nil && response.StatusCode != 200 {
 		return nil, err
 	}
 	if err != nil {
