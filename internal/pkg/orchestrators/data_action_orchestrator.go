@@ -2,6 +2,7 @@ package orchestrators
 
 import (
 	"errors"
+	"github.com/jrolstad/team-shredder/internal/pkg/core"
 	"github.com/jrolstad/team-shredder/internal/pkg/models"
 	"github.com/jrolstad/team-shredder/internal/pkg/processors"
 	"github.com/jrolstad/team-shredder/internal/pkg/repositories"
@@ -40,7 +41,7 @@ func processOrganization(configurationRepository repositories.DataActionConfigur
 		processingErrors[configuredTarget.Id] = processingError
 	}
 
-	return flattenResult(results), errors.Join(flattenErrors(processingErrors)...)
+	return flattenResult(results), errors.Join(core.FlattenErrors(processingErrors)...)
 }
 
 func processTarget(processorFactory processors.DataActionProcessorFactory, actionConfiguration *models.DataActionConfiguration) (*models.DataActionResult, error) {

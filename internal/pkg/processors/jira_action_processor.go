@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	v3 "github.com/ctreminiom/go-atlassian/v2/jira/v3"
+	"github.com/jrolstad/team-shredder/internal/pkg/core"
 	"github.com/jrolstad/team-shredder/internal/pkg/models"
 	"github.com/jrolstad/team-shredder/internal/pkg/services"
 	"strings"
@@ -52,13 +53,16 @@ func (p *JiraActionProcessor) createJiraClient(toProcess *models.DataActionConfi
 }
 
 func (p *JiraActionProcessor) queryIssues(toProcess *models.DataActionConfiguration, client *v3.Client) ([]string, error) {
-
-	searchResults, _, err := client.Issue.Search.SearchJQL(context.Background(),
+	//TODO: Implement paging
+	searchResults, response, err := client.Issue.Search.SearchJQL(context.Background(),
 		toProcess.Query,
-		[]string{},
-		[]string{},
-		1000,
+		[]string{"status"},
+		[]string{"changelog"},
+		50,
 		"")
+	if response.StatusCode != 200 {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +76,15 @@ func (p *JiraActionProcessor) queryIssues(toProcess *models.DataActionConfigurat
 }
 
 func (p *JiraActionProcessor) deleteIssues(toDelete []string, toProcess *models.DataActionConfiguration, client *v3.Client) (*models.DataActionResult, error) {
+	deleteErrors := map[string]error{}
+
 	for _, issue := range toDelete {
-		//client.Issue.Delete(context.Background(), issue, false)
-		fmt.Printf("Deleting %s", issue)
+		_, err := client.Issue.Delete(context.Background(), issue, false)
+		if err != nil {
+			deleteErrors[issue] = err
+		} else {
+			fmt.Printf("Deleting %s\n", issue)
+		}
 	}
 
 	return &models.DataActionResult{
@@ -85,7 +95,7 @@ func (p *JiraActionProcessor) deleteIssues(toDelete []string, toProcess *models.
 		StartedAt:           time.Now(),
 		EndedAt:             time.Now(),
 		AffectedObjectCount: len(toDelete),
-		FailureCount:        0,
-		Failures:            make([]error, 0),
+		FailureCount:        len(deleteErrors),
+		Failures:            core.FlattenErrors(deleteErrors),
 	}, nil
 }

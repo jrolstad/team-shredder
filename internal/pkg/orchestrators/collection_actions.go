@@ -21,12 +21,3 @@ func flattenResult(toMap map[string]*models.DataActionResult) []*models.DataActi
 
 	return result
 }
-
-func flattenErrors(toMap map[string]error) []error {
-	result := make([]error, 0)
-	for _, value := range toMap {
-		result = append(result, value)
-	}
-
-	return result
-}

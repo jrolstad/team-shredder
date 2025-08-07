@@ -27,7 +27,7 @@ func (r InMemoryDataActionConfigurationRepository) Get(organizationId string) ([
 			AppType:        "jira",
 			Action:         "delete",
 			Site:           "https://jrolstad-sandbox-1.atlassian.net",
-			Query:          "",
+			Query:          "type = Story ORDER BY created DESC",
 		},
 	}, nil
 }
