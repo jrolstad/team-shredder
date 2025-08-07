@@ -7,8 +7,7 @@ import (
 	"github.com/jrolstad/team-shredder/internal/pkg/repositories"
 )
 
-func ExecuteDataActions(configurationRepository repositories.DataActionConfigurationRepository,
-	processorFactory processors.DataActionProcessorFactory) []*models.DataActionResult {
+func ExecuteDataActions(configurationRepository repositories.DataActionConfigurationRepository, processorFactory processors.DataActionProcessorFactory) []*models.DataActionResult {
 	organizations, err := configurationRepository.GetOrganizations()
 	if err != nil {
 		return []*models.DataActionResult{createErrorResult(err)}

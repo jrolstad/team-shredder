@@ -3,19 +3,25 @@ package processors
 import (
 	"errors"
 	"github.com/jrolstad/team-shredder/internal/pkg/models"
+	"github.com/jrolstad/team-shredder/internal/pkg/services"
 	"strings"
 )
 
 type DataActionProcessorFactory struct {
 	RegisteredProcessors map[string]DataActionProcessor
+	SecretService        services.SecretService
 }
 
-func NewDataActionProcessorFactory() DataActionProcessorFactory {
+func NewDataActionProcessorFactory(secretService services.SecretService) DataActionProcessorFactory {
 	instance := DataActionProcessorFactory{
 		RegisteredProcessors: make(map[string]DataActionProcessor),
 	}
-	instance.RegisteredProcessors["jira"] = &JiraActionProcessor{}
-	instance.RegisteredProcessors["confluence"] = &ConfluenceActionProcessor{}
+	instance.RegisteredProcessors["jira"] = &JiraActionProcessor{
+		SecretService: secretService,
+	}
+	instance.RegisteredProcessors["confluence"] = &ConfluenceActionProcessor{
+		SecretService: secretService,
+	}
 
 	return instance
 }

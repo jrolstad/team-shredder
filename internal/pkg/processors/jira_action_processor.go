@@ -1,20 +1,23 @@
 package processors
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/andygrunwald/go-jira"
+	v3 "github.com/ctreminiom/go-atlassian/v2/jira/v3"
 	"github.com/jrolstad/team-shredder/internal/pkg/models"
+	"github.com/jrolstad/team-shredder/internal/pkg/services"
 	"strings"
 	"time"
 )
 
 type JiraActionProcessor struct {
+	SecretService services.SecretService
 }
 
 func (p *JiraActionProcessor) Process(toProcess *models.DataActionConfiguration) (*models.DataActionResult, error) {
 
-	jiraClient, _ := jira.NewClient(nil, p.createBaseUrl(toProcess))
+	jiraClient, err := p.createJiraClient(toProcess)
 	issuesToActOn, err := p.queryIssues(toProcess, jiraClient)
 	if err != nil {
 		return createErrorResult(err), err
@@ -28,30 +31,49 @@ func (p *JiraActionProcessor) Process(toProcess *models.DataActionConfiguration)
 	}
 }
 
-func (p *JiraActionProcessor) createBaseUrl(toProcess *models.DataActionConfiguration) string {
-	return "https://" + toProcess.Site
+func (p *JiraActionProcessor) createJiraClient(toProcess *models.DataActionConfiguration) (*v3.Client, error) {
+	instance, err := v3.New(nil, toProcess.Site)
+	if err != nil {
+		return nil, err
+	}
+
+	userName, err := p.SecretService.GetValue(models.Secret_AtlassianUserNameKey)
+	if err != nil {
+		return nil, err
+	}
+
+	password, err := p.SecretService.GetValue(models.Secret_AtlassianApiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	instance.Auth.SetBasicAuth(userName, password)
+	return instance, nil
 }
 
-func (p *JiraActionProcessor) queryIssues(toProcess *models.DataActionConfiguration, client *jira.Client) ([]string, error) {
-	options := &jira.SearchOptions{}
-	searchResults, response, err := client.Issue.Search(toProcess.Query, options)
+func (p *JiraActionProcessor) queryIssues(toProcess *models.DataActionConfiguration, client *v3.Client) ([]string, error) {
+
+	searchResults, _, err := client.Issue.Search.SearchJQL(context.Background(),
+		toProcess.Query,
+		[]string{},
+		[]string{},
+		1000,
+		"")
 	if err != nil {
-		return make([]string, 0), err
-	}
-	if response.StatusCode != 200 {
-		return make([]string, 0), errors.New(response.Status)
+		return nil, err
 	}
 
-	issues := make([]string, len(searchResults))
-	for i, issue := range searchResults {
+	issues := make([]string, len(searchResults.Issues))
+	for i, issue := range searchResults.Issues {
 		issues[i] = issue.Key
 	}
 
 	return issues, err
 }
 
-func (p *JiraActionProcessor) deleteIssues(toDelete []string, toProcess *models.DataActionConfiguration, client *jira.Client) (*models.DataActionResult, error) {
+func (p *JiraActionProcessor) deleteIssues(toDelete []string, toProcess *models.DataActionConfiguration, client *v3.Client) (*models.DataActionResult, error) {
 	for _, issue := range toDelete {
+		//client.Issue.Delete(context.Background(), issue, false)
 		fmt.Printf("Deleting %s", issue)
 	}
 
