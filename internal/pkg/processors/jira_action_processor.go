@@ -19,16 +19,20 @@ type JiraActionProcessor struct {
 func (p *JiraActionProcessor) Process(toProcess *models.DataActionConfiguration) (*models.DataActionResult, error) {
 
 	jiraClient, err := p.createJiraClient(toProcess)
+	if err != nil {
+		return createErrorResult(err), err
+	}
 	issuesToActOn, err := p.queryIssues(toProcess, jiraClient)
 	if err != nil {
 		return createErrorResult(err), err
 	}
 
-	if strings.EqualFold(toProcess.Action, "delete") {
+	switch strings.ToLower(toProcess.Action) {
+	case "delete":
 		return p.deleteIssues(issuesToActOn, toProcess, jiraClient)
-	} else if strings.EqualFold(toProcess.Action, "archive") {
+	case "archive":
 		return p.archiveIssues(issuesToActOn, toProcess, jiraClient)
-	} else {
+	default:
 		err = errors.New("unsupported action: " + toProcess.Action)
 		return createErrorResult(err), err
 	}
