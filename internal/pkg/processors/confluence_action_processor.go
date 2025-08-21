@@ -28,11 +28,12 @@ func (p *ConfluenceActionProcessor) Process(toProcess *models.DataActionConfigur
 		return createErrorResult(err), err
 	}
 
-	if strings.EqualFold(toProcess.Action, "delete") {
+	switch strings.ToLower(toProcess.Action) {
+	case "delete":
 		return p.deleteContent(contentToActOn, toProcess, client)
-	} else if strings.EqualFold(toProcess.Action, "archive") {
+	case "archive":
 		return p.archiveContent(contentToActOn, toProcess, client)
-	} else {
+	default:
 		err = errors.New("unsupported action: " + toProcess.Action)
 		return createErrorResult(err), err
 	}
@@ -110,6 +111,10 @@ func (p *ConfluenceActionProcessor) archiveContent(toArchive []string, toProcess
 
 	for _, item := range toArchive {
 		contentId, err := strconv.Atoi(item)
+		if err != nil {
+			archiveErrors[item] = err
+			continue
+		}
 		_, _, err = client.Content.Archive(context.Background(), &models2.ContentArchivePayloadScheme{
 			Pages: []*models2.ContentArchiveIDPayloadScheme{
 				{
