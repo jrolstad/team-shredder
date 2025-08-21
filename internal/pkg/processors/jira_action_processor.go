@@ -19,6 +19,9 @@ type JiraActionProcessor struct {
 func (p *JiraActionProcessor) Process(toProcess *models.DataActionConfiguration) (*models.DataActionResult, error) {
 
 	jiraClient, err := p.createJiraClient(toProcess)
+	if err != nil {
+		return createErrorResult(err), err
+	}
 	issuesToActOn, err := p.queryIssues(toProcess, jiraClient)
 	if err != nil {
 		return createErrorResult(err), err
